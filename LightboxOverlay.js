@@ -1,12 +1,11 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Animated, Dimensions, Modal, PanResponder, Platform, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Modal, PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const WINDOW_HEIGHT = Dimensions.get('window').height;
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const DRAG_DISMISS_THRESHOLD = 150;
 const STATUS_BAR_OFFSET = (Platform.OS === 'android' ? -25 : 0);
-const isIOS = Platform.OS === 'ios';
 
 const styles = StyleSheet.create({
   background: {
@@ -25,8 +24,8 @@ const styles = StyleSheet.create({
   },
   header: {
     position: 'absolute',
-    top: 0,
-    left: 0,
+    top: 30,
+    left: 20,
     width: WINDOW_WIDTH,
     backgroundColor: 'transparent',
   },
@@ -99,7 +98,7 @@ export default class LightboxOverlay extends Component {
       onPanResponderMove: Animated.event([
         null,
         { dy: this.state.pan }
-      ]),
+      ], {useNativeDriver: false}),
       onPanResponderTerminationRequest: (evt, gestureState) => true,
       onPanResponderRelease: (evt, gestureState) => {
         if(Math.abs(gestureState.dy) > DRAG_DISMISS_THRESHOLD) {
@@ -115,7 +114,7 @@ export default class LightboxOverlay extends Component {
         } else {
           Animated.spring(
             this.state.pan,
-            { toValue: 0, ...this.props.springConfig }
+            { toValue: 0, ...this.props.springConfig, useNativeDriver: false }
           ).start(() => { this.setState({ isPanning: false }); });
         }
       },
@@ -129,9 +128,6 @@ export default class LightboxOverlay extends Component {
   }
 
   open = () => {
-    if(isIOS) {
-      StatusBar.setHidden(true, 'fade');
-    }
     this.state.pan.setValue(0);
     this.setState({
       isAnimating: true,
@@ -144,7 +140,7 @@ export default class LightboxOverlay extends Component {
 
     Animated.spring(
       this.state.openVal,
-      { toValue: 1, ...this.props.springConfig }
+      { toValue: 1, ...this.props.springConfig, useNativeDriver: false }
     ).start(() => {
       this.setState({ isAnimating: false });
       this.props.didOpen();
@@ -153,15 +149,14 @@ export default class LightboxOverlay extends Component {
 
   close = () => {
     this.props.willClose();
-    if(isIOS) {
-      StatusBar.setHidden(false, 'fade');
-    }
+    
+
     this.setState({
       isAnimating: true,
     });
     Animated.spring(
       this.state.openVal,
-      { toValue: 0, ...this.props.springConfig }
+      { toValue: 0, ...this.props.springConfig, useNativeDriver: false }
     ).start(() => {
       this.setState({
         isAnimating: false,
